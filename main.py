@@ -36,7 +36,7 @@ FONT_FAMILY = 'Helvetica'
 # ERROR HANDLING & LOGGING
 logfile = f'{LOG_FILENAME}-{datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}.txt'
 try:
-    LOGFILE = open(logfile, 'w', encoding='utf-8')
+    LOGFILE = open(logfile, 'w', encoding='utf-8-sig')
 except IOError as e:
     messagebox.showerror('Program Error', f'Error: unable to create log file {logfile}')
 
@@ -234,10 +234,10 @@ def start(event):
 
     name = simpledialog.askstring("Тест", "Введите имя")
     if not os.path.isfile(DATA_FILENAME):
-        with open(DATA_FILENAME, 'w', encoding='utf-8') as file:
+        with open(DATA_FILENAME, 'w', encoding='utf-8-sig') as file:
             LOG(f"opened {DATA_FILENAME} file to export results")
             file.write(f'Имя,{",".join([btn.name for btn in buttons])},Процент успешности\n')
-    datafile = open(DATA_FILENAME, 'a', encoding='utf-8')
+    datafile = open(DATA_FILENAME, 'a', encoding='utf-8-sig')
     datafile.write(name)
 
     testing = True
