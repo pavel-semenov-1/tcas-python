@@ -13,6 +13,7 @@ work_area = monitor_info.get("Work")
 # SETTINGS
 LOG_FILENAME = 'log'
 DATA_FILENAME = 'data.csv'
+CSV_DELIEMETER = ';'
 IMAGE_LOCATION = 'img'
 BLINK_DELAY = 300
 PROGRESS_FONT_SIZE = 15
@@ -178,7 +179,7 @@ def next_question():
         lbl_progress.config(text=f'Вопрос {current_question + 1}/{len(buttons)}')
         lbl_progress.update()
     else:
-        datafile.write(f',{score*100/len(buttons)}\n')
+        datafile.write(f'{CSV_DELIEMETER}{score*100/len(buttons)}\n')
         datafile.close()
         testing = False
         LOG("showing results")
@@ -202,7 +203,7 @@ def canvas_click(event):
                 btn.right()
                 current_question += 1
                 score += 1
-                datafile.write(',1')
+                datafile.write(f'{CSV_DELIEMETER}1')
                 next_question()
             else:
                 for btn in buttons:
@@ -210,7 +211,7 @@ def canvas_click(event):
                         LOG("wrong answer submitted")
                         btn.wrong()
                         current_question += 1
-                        datafile.write(',0')
+                        datafile.write(f'{CSV_DELIEMETER}0')
                         next_question()
                         break
     else:
@@ -236,7 +237,7 @@ def start(event):
     if not os.path.isfile(DATA_FILENAME):
         with open(DATA_FILENAME, 'w', encoding='utf-8-sig') as file:
             LOG(f"opened {DATA_FILENAME} file to export results")
-            file.write(f'Имя,{",".join([btn.name for btn in buttons])},Процент успешности\n')
+            file.write(f'Имя{CSV_DELIEMETER}{CSV_DELIEMETER.join([btn.name for btn in buttons])}{CSV_DELIEMETER}Процент успешности\n')
     datafile = open(DATA_FILENAME, 'a', encoding='utf-8-sig')
     datafile.write(name)
 
