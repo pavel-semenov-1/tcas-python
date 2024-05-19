@@ -4,3 +4,4 @@ build
 .idea
 main.spec
 data.csv
+log-*.txt

@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
 from win32api import GetMonitorInfo, MonitorFromPoint
+import os.path
 
 monitor_info = GetMonitorInfo(MonitorFromPoint((0, 0)))
 work_area = monitor_info.get("Work")
@@ -54,9 +55,9 @@ def LOG(message):
 # INITIALIZE VARIABLES
 buttons = []
 current_question = 0
-results = dict()
 testing = False
-name = ''
+score = 0
+datafile = None
 
 # INTITIALIZE GUI
 app = tk.Tk()
@@ -150,25 +151,6 @@ lbl_main.place(relx=0.5, y=BACKGROUD_HEIGHT, anchor=tk.N)
 btn_test = tk.Button(app, width=BTN_TEST_WIDTH, bg='white', text='Начать тест')
 btn_test.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
 
-btn_result = tk.Button(app, bg='white', text='#')
-
-
-def export_data(event):
-    if len(results) == 0:
-        ERROR("No tests")
-        return
-    with open(DATA_FILENAME, 'w', encoding='utf-8') as file:
-        LOG(f"opened {DATA_FILENAME} file to export results")
-        file.write(f'Имя,{",".join([btn.name for btn in buttons])},Процент успешности\n')
-        for name in results.keys():
-            success_rate = 100*len(results[name])/len(buttons)
-            file.write(f"{name},{','.join([('1' if (btn.obj in results[name]) else '0') for btn in buttons])},{round(success_rate)}\n")
-    LOG(f"export finished successfully")
-
-
-btn_result.bind('<Button-1>', export_data)
-
-
 def next_question():
     LOG("loading next question")
     global current_question
@@ -187,18 +169,21 @@ def next_question():
         lbl_progress.config(text=f'Вопрос {current_question + 1}/{len(buttons)}')
         lbl_progress.update()
     else:
+        datafile.write(f',{score*100/len(buttons)}\n')
+        datafile.close()
         testing = False
         LOG("showing results")
-        lbl_main.config(text=f'Ваш результат: {len(results[name])}/{len(buttons)}')
+        lbl_main.config(text=f'Ваш результат: {score}/{len(buttons)}')
         lbl_main.update()
         lbl_progress.place_forget()
         btn_test.config(text="Попробовать ещё раз")
         btn_test.place(relx=0.5, rely=0.99, anchor=tk.S)
-        btn_result.place(relx=1, rely=1, anchor=tk.SE)
 
 
 def canvas_click(event):
     global current_question
+    global score
+    global datafile
     if testing:
         if current_question < len(buttons):
             btn = buttons[current_question]
@@ -206,7 +191,8 @@ def canvas_click(event):
                 LOG("correct answer submitted")
                 btn.right()
                 current_question += 1
-                results[name].append(btn.obj)
+                score += 1
+                datafile.write(',1')
                 next_question()
             else:
                 for btn in buttons:
@@ -214,12 +200,13 @@ def canvas_click(event):
                         LOG("wrong answer submitted")
                         btn.wrong()
                         current_question += 1
+                        datafile.write(',0')
                         next_question()
                         break
     else:
         for btn in buttons:
             if btn.x < event.x and btn.x + BUTTON_HITBOX_WIDTH > event.x and btn.y < event.y and btn.y + BUTTON_HITBOX_HEIGHT > event.y:
-                LOG(f'printing desription for button {btn.name}')
+                LOG(f'printing description for button {btn.name}')
                 lbl_main.config(text=btn.description)
                 lbl_main.update()
 
@@ -227,14 +214,20 @@ def canvas_click(event):
 def start(event):
     global current_question
     global testing
-    global results
-    global name
+    global score
+    global datafile
 
     name = simpledialog.askstring("Тест", "Введите имя")
-    results[name] = []
+    if not os.path.isfile(DATA_FILENAME):
+        with open(DATA_FILENAME, 'w', encoding='utf-8') as file:
+            LOG(f"opened {DATA_FILENAME} file to export results")
+            file.write(f'Имя,{",".join([btn.name for btn in buttons])},Процент успешности\n')
+    datafile = open(DATA_FILENAME, 'a', encoding='utf-8')
+    datafile.write(name)
 
     testing = True
     current_question = 0
+    score = 0
     random.shuffle(buttons)
     next_question()
     LOG(f"starting the test")
@@ -245,7 +238,9 @@ canvas.bind("<Button-1>", canvas_click)
 
 
 def close():
+    global datafile
     LOG("quitting")
+    datafile.close()
     sys.exit(0)
 
 
