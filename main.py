@@ -19,6 +19,8 @@ PROGRESS_FONT_SIZE = 15
 QUESTION_FONT_SIZE = 18
 BUTTON_HITBOX_WIDTH = 100
 BUTTON_HITBOX_HEIGHT = 50
+PANEL_WINDOW_HITBOX_WIDTH = 300
+PANEL_WINDOW_HITBOX_HEIGHT = 60
 LBL_MAIN_HEIGHT = 12
 LBL_MAIN_WIDTH = 100
 BTN_TEST_WIDTH = 50
@@ -51,35 +53,8 @@ def LOG(message):
     print(line)
     print(line, flush=True, file=LOGFILE)
 
-
-# INITIALIZE VARIABLES
-buttons = []
-current_question = 0
-testing = False
-score = 0
-datafile = None
-
-# INTITIALIZE GUI
-app = tk.Tk()
-PAD_HEIGHT = min((work_area[3] - BACKGROUD_HEIGHT, PAD_HEIGHT))
-app.geometry(f'{BACKGROUD_WIDTH}x{BACKGROUD_HEIGHT + PAD_HEIGHT}')
-app.resizable(width=False, height=True)
-app.minsize(BACKGROUD_WIDTH, BACKGROUD_HEIGHT + PAD_HEIGHT)
-canvas = tk.Canvas(app, bg=CANVAS_BACKGROUND_COLOR, height=BACKGROUD_HEIGHT, width=BACKGROUD_WIDTH)
-canvas.pack(fill=tk.BOTH, expand=True)
-
-LOG("GUI initialized")
-
-try:
-    bg = tk.PhotoImage(file=f'{IMAGE_LOCATION}/bg.png')
-    canvas.create_image(0, 0, image=bg, anchor=tk.NW)
-    LOG("background created")
-except FileNotFoundError as e:
-    ERROR(e)
-
-
 class PanelButton:
-    def __init__(self, obj, image, image_wrong, image_right, name, x, y, question=None, description=None):
+    def __init__(self, name, x, y, obj=None, image=None, image_wrong=None, image_right=None, question=None, description=None):
         self.question = question
         self.description = description
         self.obj = obj
@@ -105,6 +80,41 @@ class PanelButton:
         return f'{self.name} {self.x} {self.y}'
 
 
+class PanelWindow:
+    def __init__(self, x, y, description):
+        self.x = x
+        self.y = y
+        self.description = description
+
+
+# INITIALIZE VARIABLES
+buttons = []
+windows = [PanelWindow(216, 63, 'На данном индикаторе отображается условное изображение группы опасности, а также корректирующие и предупредительные рекомендации'),
+           PanelWindow(216, 156, 'На данном индикаторе отображается только условное изображение группы опасности (пустой ромб, закрашенный белый ромб, закрашенный квадрат желтого цвета). Команды корректирующие движение ВС не выдаются.'),
+           PanelWindow(643, 63, 'Данный индикатор используется для предоставления информации о высоте полета, идентификационном номере или же для набора кода ответчика (SQUAWK)')]
+current_question = 0
+testing = False
+score = 0
+datafile = None
+
+# INTITIALIZE GUI
+app = tk.Tk()
+PAD_HEIGHT = min((work_area[3] - BACKGROUD_HEIGHT, PAD_HEIGHT))
+app.geometry(f'{BACKGROUD_WIDTH}x{BACKGROUD_HEIGHT + PAD_HEIGHT}')
+app.resizable(width=False, height=True)
+app.minsize(BACKGROUD_WIDTH, BACKGROUD_HEIGHT + PAD_HEIGHT)
+canvas = tk.Canvas(app, bg=CANVAS_BACKGROUND_COLOR, height=BACKGROUD_HEIGHT, width=BACKGROUD_WIDTH)
+canvas.pack(fill=tk.BOTH, expand=True)
+
+LOG("GUI initialized")
+
+try:
+    bg = tk.PhotoImage(file=f'{IMAGE_LOCATION}/bg.png')
+    canvas.create_image(0, 0, image=bg, anchor=tk.NW)
+    LOG("background created")
+except FileNotFoundError as e:
+    ERROR(e)
+
 # LOAD & DRAW BUTTONS
 try:
     with open(f'{IMAGE_LOCATION}/positions.csv', encoding='utf-8') as positions:
@@ -115,9 +125,8 @@ try:
                 filename, x, y = line.split(',')
                 image = tk.PhotoImage(file=f'{IMAGE_LOCATION}/{filename}.png')
                 obj = canvas.create_image(x, y, image=image, anchor=tk.NW)
-                btn = PanelButton(obj, image, tk.PhotoImage(file=f'{IMAGE_LOCATION}/{filename}_wrong.png'),
-                                  tk.PhotoImage(file=f'{IMAGE_LOCATION}/{filename}_right.png'), filename, int(x),
-                                  int(y))
+                btn = PanelButton(filename, int(x), int(y), obj=obj, image=image, image_wrong=tk.PhotoImage(file=f'{IMAGE_LOCATION}/{filename}_wrong.png'),
+                                  image_right=tk.PhotoImage(file=f'{IMAGE_LOCATION}/{filename}_right.png'))
                 buttons.append(btn)
         LOG(f"successfully loaded {len(buttons)} buttons")
 except FileNotFoundError as e:
@@ -184,6 +193,7 @@ def canvas_click(event):
     global current_question
     global score
     global datafile
+    LOG(f'click {event.x} {event.y}')
     if testing:
         if current_question < len(buttons):
             btn = buttons[current_question]
@@ -204,6 +214,11 @@ def canvas_click(event):
                         next_question()
                         break
     else:
+        for window in windows:
+            if window.x < event.x and window.x + PANEL_WINDOW_HITBOX_WIDTH > event.x and window.y < event.y and window.y + PANEL_WINDOW_HITBOX_HEIGHT > event.y:
+                LOG(f'printing description for window')
+                lbl_main.config(text=window.description)
+                lbl_main.update()
         for btn in buttons:
             if btn.x < event.x and btn.x + BUTTON_HITBOX_WIDTH > event.x and btn.y < event.y and btn.y + BUTTON_HITBOX_HEIGHT > event.y:
                 LOG(f'printing description for button {btn.name}')
