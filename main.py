@@ -179,7 +179,7 @@ def next_question():
         lbl_progress.config(text=f'Вопрос {current_question + 1}/{len(buttons)}')
         lbl_progress.update()
     else:
-        datafile.write(f'{CSV_DELIEMETER}{score*100/len(buttons)}\n')
+        datafile.write(f'{CSV_DELIEMETER}{round(score*100/len(buttons))}\n')
         datafile.close()
         testing = False
         LOG("showing results")
