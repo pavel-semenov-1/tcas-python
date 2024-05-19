@@ -240,7 +240,8 @@ canvas.bind("<Button-1>", canvas_click)
 def close():
     global datafile
     LOG("quitting")
-    datafile.close()
+    if datafile is not None:
+        datafile.close()
     sys.exit(0)
 
 
