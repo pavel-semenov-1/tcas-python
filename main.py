@@ -20,8 +20,6 @@ PROGRESS_FONT_SIZE = 15
 QUESTION_FONT_SIZE = 18
 BUTTON_HITBOX_WIDTH = 100
 BUTTON_HITBOX_HEIGHT = 50
-PANEL_WINDOW_HITBOX_WIDTH = 300
-PANEL_WINDOW_HITBOX_HEIGHT = 60
 LBL_MAIN_HEIGHT = 12
 LBL_MAIN_WIDTH = 100
 BTN_TEST_WIDTH = 50
@@ -81,18 +79,36 @@ class PanelButton:
         return f'{self.name} {self.x} {self.y}'
 
 
-class PanelWindow:
-    def __init__(self, x, y, description):
+class PanelDescriptionOnlyButton:
+    def __init__(self, x, y, width, height, description):
         self.x = x
         self.y = y
+        self.width = width
+        self.height = height
         self.description = description
 
 
 # INITIALIZE VARIABLES
 buttons = []
-windows = [PanelWindow(216, 63, 'На данном индикаторе отображается условное изображение группы опасности, а также корректирующие и предупредительные рекомендации'),
-           PanelWindow(216, 156, 'На данном индикаторе отображается только условное изображение группы опасности (пустой ромб, закрашенный белый ромб, закрашенный квадрат желтого цвета). Команды корректирующие движение ВС не выдаются.'),
-           PanelWindow(643, 63, 'Данный индикатор используется для предоставления информации о высоте полета, идентификационном номере или же для набора кода ответчика (SQUAWK)')]
+arrowsDescription = 'Кнопки управления дисплеями. С помощью данных кнопок экипаж может выбирать тип запрашиваемой информационной посылки (КУР, Высота, и т.п) по запросному сигналу РЛС'
+descriptionOnlyButtons = [
+    # LEFT UPPER DISPLAY
+    PanelDescriptionOnlyButton(216, 63, 300, 60, 'На данном индикаторе отображается условное изображение группы опасности, а также корректирующие и предупредительные рекомендации'),
+    # LEFT LOWER DISPLAY
+    PanelDescriptionOnlyButton(216, 156, 300, 60, 'На данном индикаторе отображается только условное изображение группы опасности (пустой ромб, закрашенный белый ромб, закрашенный квадрат желтого цвета). Команды корректирующие движение ВС не выдаются.'),
+    # RIGHT UPPER DISPLAY   
+    PanelDescriptionOnlyButton(643, 63, 300, 60, 'Данный индикатор используется для предоставления информации о высоте полета, идентификационном номере или же для набора кода ответчика (SQUAWK)'),
+    # UP DOWN ARROWS
+    PanelDescriptionOnlyButton(639, 160, BUTTON_HITBOX_WIDTH, BUTTON_HITBOX_HEIGHT, 'Кнопка предназначенная для изменения режима работы между запросным и ответным сигналом'),
+    # ARROW UP
+    PanelDescriptionOnlyButton(743, 250, BUTTON_HITBOX_WIDTH, BUTTON_HITBOX_HEIGHT, arrowsDescription),
+    # ARROW LEFT
+    PanelDescriptionOnlyButton(638, 342, BUTTON_HITBOX_WIDTH, BUTTON_HITBOX_HEIGHT, arrowsDescription),
+    # ARROW DOWN
+    PanelDescriptionOnlyButton(743, 342, BUTTON_HITBOX_WIDTH, BUTTON_HITBOX_HEIGHT, arrowsDescription),
+    # ARROW RIGHT
+    PanelDescriptionOnlyButton(851, 342, BUTTON_HITBOX_WIDTH, BUTTON_HITBOX_HEIGHT, arrowsDescription)
+]
 current_question = 0
 testing = False
 score = 0
@@ -215,10 +231,10 @@ def canvas_click(event):
                         next_question()
                         break
     else:
-        for window in windows:
-            if window.x < event.x and window.x + PANEL_WINDOW_HITBOX_WIDTH > event.x and window.y < event.y and window.y + PANEL_WINDOW_HITBOX_HEIGHT > event.y:
-                LOG(f'printing description for window')
-                lbl_main.config(text=window.description)
+        for btn in descriptionOnlyButtons:
+            if btn.x < event.x and btn.x + btn.width > event.x and btn.y < event.y and btn.y + btn.height > event.y:
+                LOG(f'printing description for desciption only buttons')
+                lbl_main.config(text=btn.description)
                 lbl_main.update()
         for btn in buttons:
             if btn.x < event.x and btn.x + BUTTON_HITBOX_WIDTH > event.x and btn.y < event.y and btn.y + BUTTON_HITBOX_HEIGHT > event.y:
